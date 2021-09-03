@@ -1054,12 +1054,10 @@ int get_moving_and_unit_vectors(Liganddata* myligand)
 {
 	int rotb_id, i;
 	int atom_id_pointA, atom_id_pointB;
-	double origo [3];
-	double movvec [3];
 	double unitvec [3];
 	double pointA [3];
 	double pointB [3];
-	double dist;
+	double dist, scale;
 
 
 	for (rotb_id=0; rotb_id<myligand->num_of_rotbonds; rotb_id++)
@@ -1082,22 +1080,18 @@ int get_moving_and_unit_vectors(Liganddata* myligand)
                 	return 1;
 		}
 
-		for (i=0; i<3; i++) // capturing coordinates of the two atoms
+		// capturing coordinates and moving vector in pointA
+		scale = 0.0;
+		for (i=0; i<3; i++)
 		{
-			unitvec [i] = unitvec [i]/dist;
-			if (unitvec [i] >= 1) // although it is not too probable...
-				unitvec [i] = 0.999999;
+			unitvec [i] /= dist;
+			scale += unitvec [i] * pointA [i];
 		}
+		scale /= dist;
 
-		for (i=0; i<3; i++)
-			origo [i] = 0;
-
-		// capturing moving vector
-		vec_point2line(origo, pointA, pointB, movvec);
-
-		for (i=0; i<3; i++)
-		{
-			myligand->rotbonds_moving_vectors [rotb_id][i] = movvec [i];
+		// perpendicular projection of point to the line
+		for (i=0; i<3; i++){
+			myligand->rotbonds_moving_vectors [rotb_id][i] = pointA [i] - scale * unitvec [i];
 			myligand->rotbonds_unit_vectors [rotb_id][i] = unitvec [i];
 		}
 	}

@@ -114,37 +114,6 @@ double distance2(const double point1 [], const double point2 [])
 	return sub1*sub1 + sub2*sub2 + sub3*sub3;
 }
 
-void vec_point2line(const double point [], const double line_pointA [], const double line_pointB [], double vec [])
-// The function calculates the vector which moves a point given by the first parameter to its perpendicular projection
-// on a line given by to of its points (line_pointA and line_pointB parameters). The result vector is the vec parameter.
-{
-	double posvec_of_line [3];
-	double proj_of_point [3];
-	double posvec_of_line_length2, temp;
-	int i;
-
-	// vector parallel to line
-	for (i=0; i<3; i++)
-		posvec_of_line[i] = line_pointB[i] - line_pointA[i];
-
-	// length^2 of posvec_of_line
-	posvec_of_line_length2 = pow(posvec_of_line[0], 2) +
-	                         pow(posvec_of_line[1], 2) +
-	                         pow(posvec_of_line[2], 2);
-
-	temp = 0;
-	for (i=0; i<3; i++)
-		temp += posvec_of_line [i] * (point [i] - line_pointA [i]);
-	temp = temp/posvec_of_line_length2;
-
-	// perpendicular projection of point to the line
-	for (i=0; i<3; i++)
-		proj_of_point [i] = temp * posvec_of_line [i] + line_pointA [i];
-
-	for (i=0; i<3; i++)
-		vec [i] = proj_of_point [i] - point [i];
-}
-
 void rotate(double point [], const double movvec [], const double normvec [], const double* angle, int debug)
 // The function rotates the point given by the first parameter around an axis
 // which is parallel to vector normvec and which

@@ -94,8 +94,6 @@ double distance(const double [], const double []);
 
 double distance2(const double [], const double []);
 
-void vec_point2line(const double [], const double [], const double [], double []);
-
 void rotate(double [], const double [], const double [], const double*, int);
 
 std::string get_filepath(const char* filename);
