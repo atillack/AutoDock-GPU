@@ -52,7 +52,7 @@ float gpu_randf(__global uint* restrict prng_states)
 {
 	float state;
 	// State will be between 0 and 1
-	state =  native_divide(gpu_rand(prng_states),4294967296.0f);
+	state =  native_divide(gpu_rand(prng_states),4294967296.0f)*0.999999f;
 	return state;
 }
 
