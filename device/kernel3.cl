@@ -83,6 +83,7 @@ __constant       kernelconstant_conform*      kerconst_conform
 	__local float genotype_candidate[ACTUAL_GENOTYPE_LENGTH];
 	__local float genotype_deviate  [ACTUAL_GENOTYPE_LENGTH];
 	__local float genotype_bias     [ACTUAL_GENOTYPE_LENGTH];
+	__local float random_orientation[3];
         __local float rho;
 	__local uint  cons_succ;
 	__local uint  cons_fail;
@@ -161,9 +162,9 @@ __constant       kernelconstant_conform*      kerconst_conform
 			qy = native_divide(qy, s);
 			qz = native_divide(qz, s);
 		}
-		genotype_bias[3] = native_divide(atan2(qy, qx), DEG_TO_RAD);
-		genotype_bias[4] = native_divide(fast_acos(qz), DEG_TO_RAD);
-		genotype_bias[5] = native_divide(2.0f * fast_acos(qw), DEG_TO_RAD);
+		random_orientation[0] = native_divide(atan2(qy, qx), DEG_TO_RAD);
+		random_orientation[1] = native_divide(fast_acos(qz), DEG_TO_RAD);
+		random_orientation[2] = native_divide(2.0f * fast_acos(qw), DEG_TO_RAD);
 		
 		rho = 1.0f;
 		cons_succ = 0;
@@ -225,6 +226,11 @@ __constant       kernelconstant_conform*      kerconst_conform
 			genotype_candidate[gene_counter] = offspring_genotype[gene_counter] +
 			                                   genotype_deviate[gene_counter]   +
 			                                   genotype_bias[gene_counter];
+		}
+		if(tidx==0){
+			genotype_candidate[3] += random_orientation[0];
+			genotype_candidate[4] += random_orientation[1];
+			genotype_candidate[5] += random_orientation[2];
 		}
 
 		// Evaluating candidate
