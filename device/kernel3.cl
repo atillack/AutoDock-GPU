@@ -139,6 +139,32 @@ __constant       kernelconstant_conform*      kerconst_conform
 	}
 
 	if (tidx == 0) {
+		// set base orientation randomly again
+		float u1 = gpu_randf(dockpars_prng_states);
+		float u2 = gpu_randf(dockpars_prng_states);
+		float u3 = gpu_randf(dockpars_prng_states);
+		
+		float cosine, s;
+		float qw = native_sqrt(1.0f - u1);
+		float qx = qw;
+		qw *= sincos(PI_TIMES_2 * u2, &cosine);
+		qx *= cosine;
+		float qy = native_sqrt(      u1);
+		float qz = qy;
+		qy *= sincos(PI_TIMES_2 * u3, &cosine);
+		qz *= cosine;
+		
+		// convert to angle representation
+		s = native_sqrt(1.0f - (qw * qw));
+		if (s >= 0.001f){ // rotangle too small
+			qx = native_divide(qx, s);
+			qy = native_divide(qy, s);
+			qz = native_divide(qz, s);
+		}
+		genotype_bias[3] = native_divide(atan2(qy, qx), DEG_TO_RAD);
+		genotype_bias[4] = native_divide(fast_acos(qz), DEG_TO_RAD);
+		genotype_bias[5] = native_divide(2.0f * fast_acos(qw), DEG_TO_RAD);
+		
 		rho = 1.0f;
 		cons_succ = 0;
 		cons_fail = 0;
