@@ -34,14 +34,10 @@ inline __device__ uint32_t gpu_rand(uint32_t* prng_states)
 // prng_states (thread with ID tx in block with ID bx stores its state in prng_states[bx*NUM_OF_THREADS_PER_BLOCK+$
 // The random number generator uses the gcc linear congruential generator constants.
 {
-	uint state;
-	// Current state of the threads own PRNG
-	// state = prng_states[get_group_id(0)*NUM_OF_THREADS_PER_BLOCK + get_local_id(0)];
-	state = prng_states[blockIdx.x * blockDim.x + threadIdx.x];
 	// Calculating next state
-	state = (RAND_A*state+RAND_C);
+	ulong mult = (RAND_A*prng_states[blockIdx.x * blockDim.x + threadIdx.x]+RAND_C);
+	uint state = (uint)(mult % 4294967296);
 	// Saving next state to memory
-	// prng_states[get_group_id(0)*NUM_OF_THREADS_PER_BLOCK + get_local_id(0)] = state;
 	prng_states[blockIdx.x * blockDim.x + threadIdx.x] = state;
 	return state;
 }
@@ -56,7 +52,7 @@ inline __device__ float gpu_randf(uint32_t* prng_states)
 {
 	float state;
 	// State will be between 0 and 1
-	state =  ((float)gpu_rand(prng_states) / (float)MAX_UINT)*0.999999f;
+	state =  ((float)gpu_rand(prng_states) / 4294967296.0f)*0.999999f;
 	return state;
 }
 

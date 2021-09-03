@@ -40,8 +40,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 // LCG: linear congruential generator constants
 #define RAND_A                  1103515245u
 #define RAND_C                  12345u
-// WARNING: it is supposed that unsigned int is 32 bit long
-#define MAX_UINT                4294967296.0f
 
 // Sticking to array boundaries
 #define stick_to_bounds(x,a,b) x + (x <= a)*(a-x) + (x >= b)*(b-x)
