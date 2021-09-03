@@ -52,7 +52,7 @@ inline __device__ float gpu_randf(uint32_t* prng_states)
 {
 	float state;
 	// State will be between 0 and 1
-	state =  ((float)gpu_rand(prng_states) / 4294967296.0f)*0.999999f;
+	state =  ((float)gpu_rand(prng_states) / 4294967296.0f);
 	return state;
 }
 
