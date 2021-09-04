@@ -66,7 +66,11 @@ __constant       kernelconstant_interintra*   kerconst_interintra,
   __global const kernelconstant_intracontrib* kerconst_intracontrib,
 __constant       kernelconstant_intra*        kerconst_intra,
 __constant       kernelconstant_rotlist*      kerconst_rotlist,
-__constant       kernelconstant_conform*      kerconst_conform
+__constant       kernelconstant_conform*      kerconst_conform,
+
+      __global const float* angle_const,
+    __constant       float* dependence_on_theta_const,
+    __constant       float* dependence_on_rotangle_const
           )
 // The GPU global function performs local search on the pre-defined entities of conformations_next.
 // The number of blocks which should be started equals to num_of_lsentities*num_of_runs.
@@ -139,32 +143,6 @@ __constant       kernelconstant_conform*      kerconst_conform
 	}
 
 	if (tidx == 0) {
-		// set base orientation randomly again
-		float u1 = gpu_randf(dockpars_prng_states);
-		float u2 = gpu_randf(dockpars_prng_states);
-		float u3 = gpu_randf(dockpars_prng_states);
-		
-		float cosine, s;
-		float qw = native_sqrt(1.0f - u1);
-		float qx = qw;
-		qw *= sincos(PI_TIMES_2 * u2, &cosine);
-		qx *= cosine;
-		float qy = native_sqrt(      u1);
-		float qz = qy;
-		qy *= sincos(PI_TIMES_2 * u3, &cosine);
-		qz *= cosine;
-		
-		// convert to angle representation
-		s = native_sqrt(1.0f - (qw * qw));
-		if (s >= 0.001f){ // rotangle too small
-			qx = native_divide(qx, s);
-			qy = native_divide(qy, s);
-			qz = native_divide(qz, s);
-		}
-		genotype_bias[3] = native_divide(atan2(qy, qx), DEG_TO_RAD);
-		genotype_bias[4] = native_divide(fast_acos(qz), DEG_TO_RAD);
-		genotype_bias[5] = native_divide(2.0f * fast_acos(qw), DEG_TO_RAD);
-		
 		rho = 1.0f;
 		cons_succ = 0;
 		cons_fail = 0;
@@ -215,6 +193,76 @@ __constant       kernelconstant_conform*      kerconst_conform
 				genotype_deviate[gene_counter] *= dockpars_base_dang_mul_sqrt3;
 			}
 #endif
+		}
+
+		if(tidx == 0){
+			// Correcting theta change interpolating
+			// values from correction look-up-tables
+			// (X0,Y0) and (X1,Y1) are known points
+			// How to find the Y value in the straight line between Y0 and Y1,
+			// corresponding to a certain X?
+			/*
+				| dependence_on_theta_const
+				| dependence_on_rotangle_const
+				|
+				|
+				|                        Y1
+				|
+				|             Y=?
+				|    Y0
+				|_________________________________ angle_const
+				     X0         X        X1
+			*/
+
+			// Finding the index-position of "grad_delta" in the "angle_const" array
+			float current_theta    = offspring_genotype[4] * DEG_TO_RAD;
+			float current_rotangle = offspring_genotype[5] * DEG_TO_RAD;
+			uint index_theta    = floor((current_theta    - angle_const[0]) * inv_angle_delta);
+			uint index_rotangle = floor((current_rotangle - angle_const[0]) * inv_angle_delta);
+
+			// Interpolating theta values
+			// X0 -> index - 1
+			// X1 -> index + 1
+			// Expresed as weighted average:
+			// Y = [Y0 * ((X1 - X) / (X1-X0))] +  [Y1 * ((X - X0) / (X1-X0))]
+			// Simplified for GPU (less terms):
+			// Y = [Y0 * (X1 - X) + Y1 * (X - X0)] / (X1 - X0)
+			// Taking advantage of constant:
+			// Y = [Y0 * (X1 - X) + Y1 * (X - X0)] * inv_angle_delta
+
+			float X0, Y0;
+			float X1, Y1;
+			float dependence_on_theta; //Y = dependence_on_theta
+
+			// Using interpolation on out-of-bounds elements results in hang
+			if ((index_theta <= 0) || (index_theta >= 999))
+			{
+				dependence_on_theta = dependence_on_theta_const[stick_to_bounds(index_theta,0,999)];
+			} else
+			{
+				X0 = angle_const[index_theta];
+				X1 = angle_const[index_theta+1];
+				Y0 = dependence_on_theta_const[index_theta];
+				Y1 = dependence_on_theta_const[index_theta+1];
+				dependence_on_theta = (Y0 * (X1-current_theta) + Y1 * (current_theta-X0)) * inv_angle_delta;
+			}
+
+			// Interpolating rotangle values
+			float dependence_on_rotangle; // Y = dependence_on_rotangle
+			// Using interpolation on previous and/or next elements results in hang
+			// Using interpolation on out-of-bounds elements results in hang
+			if ((index_rotangle <= 0) || (index_rotangle >= 999))
+			{
+				dependence_on_rotangle = dependence_on_rotangle_const[stick_to_bounds(index_rotangle,0,999)];
+			} else{
+				X0 = angle_const[index_rotangle];
+				X1 = angle_const[index_rotangle+1];
+				Y0 = dependence_on_rotangle_const[index_rotangle];
+				Y1 = dependence_on_rotangle_const[index_rotangle+1];
+				dependence_on_rotangle = (Y0 * (X1-current_rotangle) + Y1 * (current_rotangle-X0)) * inv_angle_delta;
+			}
+			genotype_deviate[3] = native_divide(genotype_deviate[3], (dependence_on_theta * dependence_on_rotangle));
+			genotype_deviate[4] = native_divide(genotype_deviate[4], dependence_on_rotangle);
 		}
 
 		// Generating new genotype candidate

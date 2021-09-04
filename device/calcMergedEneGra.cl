@@ -838,8 +838,6 @@ void gpu_calc_energrad(
 		*/
 
 		// Finding the index-position of "grad_delta" in the "angle_const" array
-		//uint index_theta    = floor(native_divide(current_theta    - angle_const[0], angle_delta));
-		//uint index_rotangle = floor(native_divide(current_rotangle - angle_const[0], angle_delta));
 		uint index_theta    = floor((current_theta    - angle_const[0]) * inv_angle_delta);
 		uint index_rotangle = floor((current_rotangle - angle_const[0]) * inv_angle_delta);
 

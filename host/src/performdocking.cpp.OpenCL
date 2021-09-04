@@ -794,6 +794,9 @@ parameters argc and argv:
 			setKernelArg(tData.kernel3,33,sizeof(cData.mem_intra_const),                  &cData.mem_intra_const);
 			setKernelArg(tData.kernel3,34,sizeof(cData.mem_rotlist_const),                &cData.mem_rotlist_const);
 			setKernelArg(tData.kernel3,35,sizeof(cData.mem_conform_const),                &cData.mem_conform_const);
+			setKernelArg(tData.kernel3,36,sizeof(cData.mem_angle_const),                  &cData.mem_angle_const);
+			setKernelArg(tData.kernel3,37,sizeof(cData.mem_dependence_on_theta_const),    &cData.mem_dependence_on_theta_const);
+			setKernelArg(tData.kernel3,38,sizeof(cData.mem_dependence_on_rotangle_const), &cData.mem_dependence_on_rotangle_const);
 			kernel3_gxsize = blocksPerGridForEachLSEntity * threadsPerBlock;
 			kernel3_lxsize = threadsPerBlock;
 			#ifdef DOCK_DEBUG
