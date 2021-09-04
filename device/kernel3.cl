@@ -215,8 +215,8 @@ __constant       kernelconstant_conform*      kerconst_conform,
 			*/
 
 			// Finding the index-position of "grad_delta" in the "angle_const" array
-			float current_theta    = offspring_genotype[4] * DEG_TO_RAD;
-			float current_rotangle = offspring_genotype[5] * DEG_TO_RAD;
+			float current_theta    = fmod_pi2(PI_TIMES_2 + offspring_genotype[4] * DEG_TO_RAD);
+			float current_rotangle = fmod_pi2(PI_TIMES_2 + offspring_genotype[5] * DEG_TO_RAD);
 			uint index_theta    = floor((current_theta    - angle_const[0]) * inv_angle_delta);
 			uint index_rotangle = floor((current_rotangle - angle_const[0]) * inv_angle_delta);
 
